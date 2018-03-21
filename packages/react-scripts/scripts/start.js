@@ -97,6 +97,7 @@ choosePort(HOST, DEFAULT_PORT)
         clearConsole();
       }
       console.log(chalk.cyan('Starting the development server...\n'));
+      console.log(chalk.cyan('You can config development proxy in package.json...\n'));
       openBrowser(urls.localUrlForBrowser);
     });
 
