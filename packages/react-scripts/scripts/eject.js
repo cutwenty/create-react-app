@@ -86,7 +86,16 @@ inquirer
       }
     }
 
-    const folders = ['config', 'config/jest', 'scripts'];
+    const folders = [
+      'config',
+      'config/jest',
+      'config/custom-react-scripts',
+      'config/custom-react-scripts/customizers',
+      'config/custom-react-scripts/options',
+      'config/custom-react-scripts/utils',
+      'config/custom-react-scripts/webpack-config',
+      'scripts',
+    ];
 
     // Make shallow array of files paths
     const files = folders.reduce((files, folder) => {

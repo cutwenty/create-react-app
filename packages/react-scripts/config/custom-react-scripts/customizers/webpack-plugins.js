@@ -4,4 +4,7 @@ module.exports = {
   WEBPACK_DASHBOARD: {
     get: () => new DashboardPlugin(),
   },
+  // WEBPACK_PROVIDEPLUGIN: {
+  //   get: () => webpack.ProvidePlugin({ }),
+  // }
 };
