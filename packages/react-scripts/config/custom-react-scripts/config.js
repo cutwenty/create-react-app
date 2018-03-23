@@ -13,9 +13,13 @@ module.exports = getCustomConfig = (isDev = true) => {
     return mapObject(
       group,
       (customizer, key) => {
+        const result = customizer.get(isDev);
+        // @remove-on-eject-begin
         const envValue = process.env['REACT_APP_' + key];
         const activeEnvValue = env && envValue && envValue !== 'false';
-        return (activeEnvValue || customizer.default) && customizer.get(isDev);
+        result = (activeEnvValue || customizer.default) && result;
+        // @remove-on-eject-end
+        return result;
       },
       true
     );

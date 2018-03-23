@@ -5,17 +5,16 @@ const stylusLoader = require.resolve('stylus-loader');
 
 module.exports = {
   CSS: {
-    default: true,
-    get: styleLoader(undefined, /\.css$/, /\.module\.css$/),
+    get: styleLoader(undefined, /\.css$/, /\.module\.css$/, false),
   },
   SASS: {
-    get: styleLoader(sassLoader, /\.s[ac]ss$/, /\.module\.s[ac]ss$/),
+    get: styleLoader(sassLoader, /\.s[ac]ss$/, /\.module\.s[ac]ss$/, false),
   },
   LESS: {
-    get: styleLoader(lessLoader, /\.less$/, /\.module\.less$/),
+    get: styleLoader(lessLoader, /\.less$/, /\.module\.less$/, false),
   },
   STYLUS: {
-    get: styleLoader(stylusLoader, /\.styl/, /\.module\.styl/),
+    get: styleLoader(stylusLoader, /\.styl/, /\.module\.styl/, false),
   },
   STYLUS_MODULES: {
     get: styleLoader(stylusLoader, /\.module\.styl/, undefined, true),
