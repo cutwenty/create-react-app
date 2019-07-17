@@ -36,13 +36,29 @@ Just create a project, and you’re good to go.
 
 **You’ll need to have Node >= 6 on your local development machine** (but it’s not required on the server). You can use [nvm](https://github.com/creationix/nvm#installation) (macOS/Linux) or [nvm-windows](https://github.com/coreybutler/nvm-windows#node-version-manager-nvm-for-windows) to easily switch Node versions between different projects.
 
-To create a new app, run a single command:
+To create a new app, you may choose one of the following methods:
+
+### npx
 
 ```sh
 npx create-react-app my-app
 ```
 
 *([npx](https://medium.com/@maybekatz/introducing-npx-an-npm-package-runner-55f7d4bd282b) comes with npm 5.2+ and higher, see [instructions for older npm versions](https://gist.github.com/gaearon/4064d3c23a77c74a3614c498a8bb1c5f))*
+
+### npm
+
+```sh
+npm init react-app my-app
+```
+*`npm init <initializer>` is available in npm 6+*
+
+### Yarn
+
+```sh
+yarn create react-app my-app
+```
+*`yarn create` is available in Yarn 0.25+*
 
 It will create a directory called `my-app` inside the current folder.<br>
 Inside that directory, it will generate the initial project structure and install the transitive dependencies:
@@ -54,16 +70,16 @@ my-app
 ├── package.json
 ├── .gitignore
 ├── public
-│   └── favicon.ico
-│   └── index.html
+│   ├── favicon.ico
+│   ├── index.html
 │   └── manifest.json
 └── src
-    └── App.css
-    └── App.js
-    └── App.test.js
-    └── index.css
-    └── index.js
-    └── logo.svg
+    ├── App.css
+    ├── App.js
+    ├── App.test.js
+    ├── index.css
+    ├── index.js
+    ├── logo.svg
     └── registerServiceWorker.js
 ```
 
@@ -101,7 +117,6 @@ Builds the app for production to the `build` folder.<br>
 It correctly bundles React in production mode and optimizes the build for the best performance.
 
 The build is minified and the filenames include the hashes.<br>
-By default, it also [includes a service worker](https://github.com/facebook/create-react-app/blob/master/packages/react-scripts/template/README.md#making-a-progressive-web-app) so that your app loads from local cache on future visits.
 
 Your app is ready to be deployed.
 
@@ -147,7 +162,7 @@ The [User Guide](https://github.com/facebook/create-react-app/blob/master/packag
 - [Analyzing the Bundle Size](https://github.com/facebook/create-react-app/blob/master/packages/react-scripts/template/README.md#analyzing-the-bundle-size)
 - [Deployment](https://github.com/facebook/create-react-app/blob/master/packages/react-scripts/template/README.md#deployment)
 - [Advanced Configuration](https://github.com/facebook/create-react-app/blob/master/packages/react-scripts/template/README.md#advanced-configuration)
-- [Troubleshooting](https://github.com/facebook/create-react-app/blob/master/packages/react-scripts/template/README.md#troubleshooting)
+- [Troubleshooting](https://github.com/facebook/create-react-app/blob/master/packages/react-scripts/template/README.md#troubleshooting-1)
 
 A copy of the user guide will be created as `README.md` in your project folder.
 
@@ -173,7 +188,7 @@ Your environment will have everything you need to build a modern single-page Rea
 * A fast interactive unit test runner with built-in support for coverage reporting.
 * A live development server that warns about common mistakes.
 * A build script to bundle JS, CSS, and images for production, with hashes and sourcemaps.
-* An offline-first [service worker](https://developers.google.com/web/fundamentals/getting-started/primers/service-workers) and a [web app manifest](https://developers.google.com/web/fundamentals/engage-and-retain/web-app-manifest/), meeting all the [Progressive Web App](https://github.com/facebook/create-react-app/blob/master/packages/react-scripts/template/README.md#making-a-progressive-web-app) criteria.
+* An offline-first [service worker](https://developers.google.com/web/fundamentals/getting-started/primers/service-workers) and a [web app manifest](https://developers.google.com/web/fundamentals/engage-and-retain/web-app-manifest/), meeting all the [Progressive Web App](https://github.com/facebook/create-react-app/blob/master/packages/react-scripts/template/README.md#making-a-progressive-web-app) criteria. (*Note: Using the service worker is opt-in as of `react-scripts@2.0.0` and higher*)
 * Hassle-free updates for the above tools with a single dependency.
 
 Check out [this guide](https://github.com/nitishdayal/cra_closer_look) for an overview of how these tools fit together.
@@ -202,6 +217,8 @@ Here’s a few common cases where you might want to try something else:
 
 * If you want to use **TypeScript**, consider using [create-react-app-typescript](https://github.com/wmonk/create-react-app-typescript).
 
+* If you want to use **Parcel** instead of **Webpack** as your bundler, consider using [create-react-app-parcel](https://github.com/sw-yx/create-react-app-parcel).
+
 * Finally, if you need **more customization**, check out [Neutrino](https://neutrino.js.org/) and its [React preset](https://neutrino.js.org/packages/react/).
 
 All of the above tools can work with little to no configuration.
@@ -224,3 +241,7 @@ We are grateful to the authors of existing related projects for their ideas and 
 * [@eanplatter](https://github.com/eanplatter)
 * [@insin](https://github.com/insin)
 * [@mxstbr](https://github.com/mxstbr)
+
+## License
+
+Create React App is open source software [licensed as MIT](https://github.com/facebook/create-react-app/blob/master/LICENSE).

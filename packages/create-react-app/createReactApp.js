@@ -49,7 +49,7 @@ const url = require('url');
 const hyperquest = require('hyperquest');
 const envinfo = require('envinfo');
 const os = require('os');
-const findMonorepo = require('react-dev-utils/workspaceUtils').findMonorepo;
+
 const packageJson = require('./package.json');
 
 // These files should be allowed to remain on a failed install,
@@ -76,6 +76,7 @@ const program = new commander.Command(packageJson.name)
     'use a non-standard version of react-scripts'
   )
   .option('--use-npm')
+  .option('--use-pnp')
   .allowUnknownOption()
   .on('--help', () => {
     console.log(`    Only ${chalk.green('<project-directory>')} is required.`);
@@ -84,9 +85,15 @@ const program = new commander.Command(packageJson.name)
       `    A custom ${chalk.cyan('--scripts-version')} can be one of:`
     );
     console.log(`      - a specific npm version: ${chalk.green('0.8.2')}`);
+    console.log(`      - a specific npm tag: ${chalk.green('@next')}`);
     console.log(
       `      - a custom fork published on npm: ${chalk.green(
         'my-react-scripts'
+      )}`
+    );
+    console.log(
+      `      - a local path relative to the current working directory: ${chalk.green(
+        'file:../my-react-scripts'
       )}`
     );
     console.log(
@@ -115,15 +122,28 @@ const program = new commander.Command(packageJson.name)
   })
   .parse(process.argv);
 
+if (program.info) {
+  console.log(chalk.bold('\nEnvironment Info:'));
+  return envinfo
+    .run(
+      {
+        System: ['OS', 'CPU'],
+        Binaries: ['Node', 'npm', 'Yarn'],
+        Browsers: ['Chrome', 'Edge', 'Internet Explorer', 'Firefox', 'Safari'],
+        npmPackages: ['react', 'react-dom', 'react-scripts'],
+        npmGlobalPackages: ['create-react-app'],
+      },
+      {
+        clipboard: true,
+        duplicates: true,
+        showNotFound: true,
+      }
+    )
+    .then(console.log)
+    .then(() => console.log(chalk.green('Copied To Clipboard!\n')));
+}
+
 if (typeof projectName === 'undefined') {
-  if (program.info) {
-    envinfo.print({
-      packages: ['react', 'react-dom', 'react-scripts'],
-      noNativeIDE: true,
-      duplicates: true,
-    });
-    process.exit(0);
-  }
   console.error('Please specify the project directory:');
   console.log(
     `  ${chalk.cyan(program.name())} ${chalk.green('<project-directory>')}`
@@ -159,10 +179,11 @@ createApp(
   program.verbose,
   program.scriptsVersion,
   program.useNpm,
+  program.usePnp,
   hiddenProgram.internalTestingTemplate
 );
 
-function createApp(name, verbose, version, useNpm, template) {
+function createApp(name, verbose, version, useNpm, usePnp, template) {
   const root = path.resolve(name);
   const appName = path.basename(root);
 
@@ -185,7 +206,7 @@ function createApp(name, verbose, version, useNpm, template) {
     JSON.stringify(packageJson, null, 2) + os.EOL
   );
 
-  const useYarn = useNpm ? false : shouldUseYarn(root);
+  const useYarn = useNpm ? false : shouldUseYarn();
   const originalDirectory = process.cwd();
   process.chdir(root);
   if (!useYarn && !checkThatNpmCanReadCwd()) {
@@ -195,7 +216,9 @@ function createApp(name, verbose, version, useNpm, template) {
   if (!semver.satisfies(process.version, '>=6.0.0')) {
     console.log(
       chalk.yellow(
-        `You are using Node ${process.version} so the project will be bootstrapped with an old unsupported version of tools.\n\n` +
+        `You are using Node ${
+          process.version
+        } so the project will be bootstrapped with an old unsupported version of tools.\n\n` +
           `Please update to Node 6 or higher for a better, fully supported experience.\n`
       )
     );
@@ -209,7 +232,9 @@ function createApp(name, verbose, version, useNpm, template) {
       if (npmInfo.npmVersion) {
         console.log(
           chalk.yellow(
-            `You are using npm ${npmInfo.npmVersion} so the project will be boostrapped with an old unsupported version of tools.\n\n` +
+            `You are using npm ${
+              npmInfo.npmVersion
+            } so the project will be boostrapped with an old unsupported version of tools.\n\n` +
               `Please update to npm 3 or higher for a better, fully supported experience.\n`
           )
         );
@@ -218,10 +243,19 @@ function createApp(name, verbose, version, useNpm, template) {
       version = 'react-scripts@0.9.x';
     }
   }
-  run(root, appName, version, verbose, originalDirectory, template, useYarn);
+  run(
+    root,
+    appName,
+    version,
+    verbose,
+    originalDirectory,
+    template,
+    useYarn,
+    usePnp
+  );
 }
 
-function isYarnAvailable() {
+function shouldUseYarn() {
   try {
     execSync('yarnpkg --version', { stdio: 'ignore' });
     return true;
@@ -230,12 +264,7 @@ function isYarnAvailable() {
   }
 }
 
-function shouldUseYarn(appDir) {
-  const mono = findMonorepo(appDir);
-  return (mono.isYarnWs && mono.isAppIncluded) || isYarnAvailable();
-}
-
-function install(root, useYarn, dependencies, verbose, isOnline) {
+function install(root, useYarn, usePnp, dependencies, verbose, isOnline) {
   return new Promise((resolve, reject) => {
     let command;
     let args;
@@ -244,6 +273,9 @@ function install(root, useYarn, dependencies, verbose, isOnline) {
       args = ['add', '--exact'];
       if (!isOnline) {
         args.push('--offline');
+      }
+      if (usePnp) {
+        args.push('--enable-pnp');
       }
       [].push.apply(args, dependencies);
 
@@ -269,6 +301,12 @@ function install(root, useYarn, dependencies, verbose, isOnline) {
         '--loglevel',
         'error',
       ].concat(dependencies);
+
+      if (usePnp) {
+        console.log(chalk.yellow("NPM doesn't support PnP."));
+        console.log(chalk.yellow('Falling back to the regular installs.'));
+        console.log();
+      }
     }
 
     if (verbose) {
@@ -295,7 +333,8 @@ function run(
   verbose,
   originalDirectory,
   template,
-  useYarn
+  useYarn,
+  usePnp
 ) {
   const packageToInstall = getInstallPackage(version, originalDirectory);
   const allDependencies = ['react', 'react-dom', packageToInstall];
@@ -318,28 +357,39 @@ function run(
       );
       console.log();
 
-      return install(root, useYarn, allDependencies, verbose, isOnline).then(
-        () => packageName
-      );
+      return install(
+        root,
+        useYarn,
+        usePnp,
+        allDependencies,
+        verbose,
+        isOnline
+      ).then(() => packageName);
     })
-    .then(packageName => {
+    .then(async packageName => {
       checkNodeVersion(packageName);
       setCaretRangeForRuntimeDeps(packageName);
 
-      const scriptsPath = path.resolve(
-        process.cwd(),
-        'node_modules',
-        packageName,
-        'scripts',
-        'init.js'
+      const pnpPath = path.resolve(process.cwd(), '.pnp.js');
+
+      const nodeArgs = fs.existsSync(pnpPath) ? ['--require', pnpPath] : [];
+
+      await executeNodeScript(
+        {
+          cwd: process.cwd(),
+          args: nodeArgs,
+        },
+        [root, appName, verbose, originalDirectory, template],
+        `
+        var init = require('${packageName}/scripts/init.js');
+        init.apply(null, JSON.parse(process.argv[1]));
+      `
       );
-      const init = require(scriptsPath);
-      init(root, appName, verbose, originalDirectory, template);
 
       if (version === 'react-scripts@0.9.x') {
         console.log(
           chalk.yellow(
-            `\nNote: the project was boostrapped with an old unsupported version of tools.\n` +
+            `\nNote: the project was bootstrapped with an old unsupported version of tools.\n` +
               `Please update to Node >=6 and npm >=3 to get supported tools in new projects.\n`
           )
         );
@@ -389,14 +439,18 @@ function getInstallPackage(version, originalDirectory) {
   const validSemver = semver.valid(version);
   if (validSemver) {
     packageToInstall += `@${validSemver}`;
-  } else if (version && version.match(/^file:/)) {
-    packageToInstall = `file:${path.resolve(
-      originalDirectory,
-      version.match(/^file:(.*)?$/)[1]
-    )}`;
   } else if (version) {
-    // for tar.gz or alternative paths
-    packageToInstall = version;
+    if (version[0] === '@' && version.indexOf('/') === -1) {
+      packageToInstall += version;
+    } else if (version.match(/^file:/)) {
+      packageToInstall = `file:${path.resolve(
+        originalDirectory,
+        version.match(/^file:(.*)?$/)[1]
+      )}`;
+    } else {
+      // for tar.gz or alternative paths
+      packageToInstall = version;
+    }
   }
   return packageToInstall;
 }
@@ -518,6 +572,11 @@ function checkNodeVersion(packageName) {
     packageName,
     'package.json'
   );
+
+  if (!fs.existsSync(packageJsonPath)) {
+    return;
+  }
+
   const packageJson = require(packageJsonPath);
   if (!packageJson.engines || !packageJson.engines.node) {
     return;
@@ -769,6 +828,26 @@ function checkIfOnline(useYarn) {
       } else {
         resolve(err == null);
       }
+    });
+  });
+}
+
+function executeNodeScript({ cwd, args }, data, source) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(
+      process.execPath,
+      [...args, '-e', source, '--', JSON.stringify(data)],
+      { cwd, stdio: 'inherit' }
+    );
+
+    child.on('close', code => {
+      if (code !== 0) {
+        reject({
+          command: `node ${args.join(' ')}`,
+        });
+        return;
+      }
+      resolve();
     });
   });
 }
